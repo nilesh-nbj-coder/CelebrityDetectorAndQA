@@ -13,8 +13,8 @@ spec:
         app: llmops-app
     spec:
       containers:
-      - name: llmops-app
-        image: us-central1-docker.pkg.dev/gen-lang-client-0729539659/llmops-repo/llmops-app:latest
+      - name: llmops-app                   
+        image: us-central1-docker.pkg.dev/project-c2b8068a-456b-4f92-925/llmops-repo/llmops-app:latest
         ports:
         - containerPort: 5000
         env:
