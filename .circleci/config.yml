@@ -1,0 +1,44 @@
+version: 2.1
+
+orbs:
+  # Official orbs to simplify GCP interactions
+  gcp-cli: circleci/gcp-cli@3.2.1
+
+jobs:
+  build-and-push:
+    docker:
+      # This is the execution environment for the CircleCI job itself
+      - image: cimg/base:stable 
+    steps:
+      - checkout
+      - setup_remote_docker:
+          docker_layer_caching: true
+
+      # 1. Authenticate with GCP via OIDC (No JSON key needed)
+      - gcp-cli/install
+      - gcp-cli/setup:
+          project-id: $GCP_PROJECT_ID
+          workload-identity-user: $GCP_WIP_ID
+
+      # 2. Configure Docker to authenticate with Artifact Registry
+      - run:
+          name: Configure Docker Helper
+          command: |
+            gcloud auth configure-docker us-central1-docker.pkg.dev
+
+      # 3. Build and Push the Image
+      - run:
+          name: Build and Push Docker Image
+          command: |
+            # Define your image path
+            IMAGE_NAME="us-central1-docker.pkg.dev/${GCP_PROJECT_ID}/llmops-repo/llmops-app:${CIRCLE_SHA1}"
+            
+            docker build -t $IMAGE_NAME .
+            docker push $IMAGE_NAME
+
+workflows:
+  build-workflow:
+    jobs:
+      - build-and-push:
+          context: 
+            - gcp-auth # Store your IDs in a CircleCI Context for security
